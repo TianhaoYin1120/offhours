@@ -55,7 +55,7 @@
 
   const D = {};
   const sampleFromUrl = new URLSearchParams(location.search).get("sample");
-  const ui = { week: "token", daily: "usd", range: "all", venueRange: "all", tickerRange: "all", venue: "venues", query: "", sort: { key: "token", dir: -1 }, ticker: null, tickerLimit: "10", sample: ["shared", "expanded"].includes(sampleFromUrl) ? sampleFromUrl : "all" };
+  const ui = { week: "token", daily: "usd", range: "all", venueRange: "all", tickerRange: "all", venue: "families", query: "", sort: { key: "token", dir: -1 }, ticker: null, tickerLimit: "10", sample: ["shared", "expanded"].includes(sampleFromUrl) ? sampleFromUrl : "all" };
   const charts = {};
 
   async function load(name) {
@@ -416,8 +416,8 @@
       if (!matchedDays.has(ticker)) matchedDays.set(ticker, new Set());
       matchedDays.get(ticker).add(date);
     }
-    $('[data-sample="shared"]').textContent = `Original four sources (${new Set(core.map(r => r[5])).size} tickers)`;
-    $('[data-sample="expanded"]').textContent = `All seven sources (${new Set(expanded.map(r => r[5])).size} tickers)`;
+    $('[data-sample="shared"]').textContent = `Four-source overlap (${new Set(core.map(r => r[5])).size} tickers)`;
+    $('[data-sample="expanded"]').textContent = `Seven-source overlap (${new Set(expanded.map(r => r[5])).size} tickers)`;
     pressed("sample", ui.sample);
     let rows = shared ? matched : sample.all.filter(row => row[0] >= firstDate);
     const tickerMenu = $("#shared-ticker");
@@ -473,7 +473,7 @@
     const count = shared ? new Set(rows.map(r => r[5])).size : 0;
     const explanation = shared
       ? `Each ticker had recorded trades on the same date across ${ui.sample === "expanded" ? "Binance, Kraken, Gate and tracked pools on Base, Ethereum, Solana and BNB Chain" : "the original four sources (Binance, Kraken, Coinbase pools on Base and Ondo pools on Ethereum)"}. This selection has ${count} securities, ${pairs} ticker-date matches and ${dates.length} market dates. A date qualifies on full-day volume, so venues can trade in different sessions. The off-hours share is weighted by dollars traded.`
-      : "Recorded token volume across all tracked tickers in the selected period. Order books and blockchain pool groups are distinct sources. Product totals combine the recorded sources for each issuer. Coverage and collection start dates vary.";
+      : "Recorded trades across all selected securities. Each product combines its covered sources. Coverage and collection start dates vary. Off-hours share is weighted by dollars traded.";
     $("#venue-note").textContent = `${rangeLabel(d.dates, ui.venueRange)}. ${explanation}` +
       (!shared && other > 0 ? ` Pools with other counterpart assets contributed a further ${usd(other)}, excluded here.` : "");
     const tableRows = entries.map(({ product, venue, total, off, observed }) =>
@@ -886,6 +886,7 @@
     bindRange("range", "range", renderDaily);
     const sharedCount = new Set(D.daily.venue_comparison.matched.map(row => row[5])).size;
     $("#overview-shared").textContent = `Compare the ${sharedCount} tickers traded on the original four sources on matching dates`;
+    $("#product-options").open = ui.sample !== "all";
     bindRange("sample", "sample", () => {
       const url = new URL(location.href);
       if (ui.sample !== "all") url.searchParams.set("sample", ui.sample);
